@@ -24,7 +24,6 @@ private:
 };
 
 // Custom container class to store word frequencies
-// Custom container class to store word frequencies
 template<typename Key, typename Value>
 class WordFrequencyContainer {
 private:
@@ -77,9 +76,10 @@ public:
     }
 };
 
-
 // Class for analyzing file metadata
 class FileMetadataAnalyzer {
+private:
+    bool isEncrypted = true;
 public:
     // Analyze metadata for a single file
     static FileMetadata analyze(const std::string& filename);
@@ -115,6 +115,7 @@ public:
     static void analyzeText(const std::string& filename, Container& wordFrequencies);
 };
 
+// Concept: Concepts
 template<typename T>
 concept CompressionAlgorithm = requires(T algorithm, const std::string& filename) {
     { algorithm.compress(filename) } -> std::same_as<std::string>;
