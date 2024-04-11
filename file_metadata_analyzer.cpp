@@ -44,7 +44,8 @@ std::string FileMetadata::last_modified() const {
         std::time_t modified_time = result.st_mtime;
         return std::asctime(std::localtime(&modified_time));
     }
-    return "";
+    // Throw an exception when the file is not found
+    throw std::runtime_error("File not found: " + m_filename);
 }
 
 bool FileMetadata::is_numeric() const {
@@ -84,6 +85,9 @@ FileMetadataAnalyzer::analyze_numeric(T value) {
 template<typename Container>
 void FileMetadataAnalyzer::analyzeText(const std::string& filename, Container& wordFrequencies) {
     std::ifstream file(filename);
+    if (!file) {
+        throw std::runtime_error("File not found: " + filename);
+    }
     std::string word;
     while (file >> word) {
         // Convert word to lowercase for case-insensitive analysis
@@ -97,26 +101,26 @@ void FileMetadataAnalyzer::analyzeText(const std::string& filename, Container& w
     }
 }
 
-struct GzipAlgorithm {
-    static std::string compress(const std::string& filename) {
-        return "gzip compression";
+// Helper class to demonstrate template friendship
+template<typename T>
+class FileAnalyzerHelper { 
+//This class may contain methods to help the analyzer in its tasks , Template friendship would help in that regards    
+public:
+    static void accessPrivateMember() {
+        FileMetadataAnalyzer File_friend;
+        if(File_friend.isEncrypted) {
+            std::cout<<endl<<"The template friendship is present";
+        }
+        else {
+            std::cout<<endl<<"The template friendship is not present";
+        }
     }
-};
-
-struct Bzip2Algorithm {
-    static std::string compress(const std::string& filename) {
-        return "bzip2 compression";
-    }
-};
-
-struct InvalidAlgorithm {
-    // No compress function defined
 };
 
 int main() {
     // Test single file analysis
     std::string filename1 = "file1.txt";
-    FileMetadata metadata1 = FileMetadataAnalyzer::analyze(filename1);//setter method 
+    FileMetadata metadata1 = FileMetadataAnalyzer::analyze(filename1);
     std::cout << "Filename: " << metadata1.filename() << std::endl;
     std::cout << "Extension: " << metadata1.extension() << std::endl;
     std::cout << "Last Modified: " << metadata1.last_modified() << std::endl;
@@ -143,21 +147,17 @@ int main() {
     int numeric_value = 12345;
     FileMetadata numeric_metadata = FileMetadataAnalyzer::analyze_numeric(numeric_value);
     std::cout << "Filename (Numeric): " << numeric_metadata.filename() << std::endl;
-    std::cout << "Extension (Numeric): " << numeric_metadata.extension() << std::endl;
-    std::cout << "Last Modified (Numeric): " << numeric_metadata.last_modified() << std::endl;
 
     // Test text analysis and word frequency container
     std::string text_filename = "sample_text.txt";
+    //std::string text_filename = "sample_text2.txt";
     WordFrequencyContainer<std::string, int> wordFrequencies;
     FileMetadataAnalyzer::analyzeText(text_filename, wordFrequencies);
     std::cout << std::endl<< "Word Frequencies:" << std::endl;
     wordFrequencies.print();
 
-    std::string filename = "file1.txt";
-
-    std::cout << "Compression analysis using GzipAlgorithm: " << CompressionAnalyzer::analyze<GzipAlgorithm>(filename) << std::endl;
-    std::cout << "Compression analysis using Bzip2Algorithm: " << CompressionAnalyzer::analyze<Bzip2Algorithm>(filename) << std::endl;
-    //std::cout << "Compression analysis using Bzip2Algorithm: " << CompressionAnalyzer::analyze<InvalidAlgorithm>(filename) << std::endl;
+    // Test template friendship
+    FileAnalyzerHelper<int>::accessPrivateMember();
 
     return 0;
 }
