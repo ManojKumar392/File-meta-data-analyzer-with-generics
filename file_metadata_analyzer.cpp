@@ -109,10 +109,11 @@ public:
     static void accessPrivateMember() {
         FileMetadataAnalyzer File_friend;
         if(File_friend.isEncrypted) {
-            std::cout<<endl<<"The template friendship is present";
+            std::cout<<endl<<"The file is encrypted";
         }
         else {
-            std::cout<<endl<<"The template friendship is not present";
+            std::cout<<endl<<"The file is not encrypted \n ENCRYPTING...";
+            File_friend.isEncrypted = true;
         }
     }
 };
