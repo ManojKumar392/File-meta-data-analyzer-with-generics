@@ -113,16 +113,5 @@ concept CompressionAlgorithm = requires(T algorithm, const std::string& filename
     { algorithm.compress(filename) } -> std::same_as<std::string>;
 };
 
-// Class for analyzing file compression
-class CompressionAnalyzer {
-public:
-    // Analyze compression for a single file using concept-based approach
-    template<CompressionAlgorithm Algorithm>
-    static std::string analyze(const std::string& filename) {
-        return Algorithm::compress(filename);
-    }
-};
-
-
 #endif // FILE_METADATA_ANALYZER_HPP
 
