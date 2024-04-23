@@ -1,12 +1,38 @@
 #include "file_metadata_analyzer.hpp"
 #include <sys/stat.h>
-#include <ctime>
 #include <iostream>
 #include <chrono> // For std::chrono
 #include <ctime>  // For std::localtime
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+
+// First encryption method structure
+struct SimpleEncryption {
+    std::string name = "SimpleEncryption";
+    
+    // Encryption method for a file
+    std::string encrypt(const std::string& filename) {
+        // Simple encryption logic (for demonstration purposes)
+        std::string encrypted = "Encrypted with SimpleEncryption: " + filename;
+        std::cout << encrypted << std::endl;
+        return encrypted;
+    }
+};
+
+// Second encryption method structure
+struct AdvancedEncryption {
+    std::string name = "AdvancedEncryption";
+    
+    // Encryption method for a file
+    std::string encrypt(const std::string& filename) {
+        // Advanced encryption logic (for demonstration purposes)
+        std::string encrypted = "Encrypted with AdvancedEncryption: " + filename;
+        std::cout << encrypted << std::endl;
+        return encrypted;
+    }
+};
+
 
 FileMetadata::FileMetadata(const std::string& filename) : m_filename(filename) {
     // Initialize extension
@@ -77,9 +103,19 @@ void FileMetadataAnalyzer::analyze_lambda(const std::string& filename, Func&& fu
 
 template<typename T>
 typename std::enable_if<std::is_arithmetic<T>::value, FileMetadata>::type
-FileMetadataAnalyzer::analyze_numeric(T value) {
-    // Example of using type traits to analyze numeric data
-    return FileMetadata(std::to_string(value));
+FileMetadataAnalyzer::analyze_numeric(const std::string& filename, T filesize) {
+    // Retrieve metadata for the specified file
+    FileMetadata metadata(filename);
+    
+    // Format file size as a string
+    std::ostringstream oss;
+    oss << filesize;
+    
+    // Print the file size
+    std::cout << "File: " << filename << " has a size of " << oss.str() << " bytes." << std::endl;
+    
+    // Return the metadata object
+    return metadata;
 }
 
 template<typename Container>
@@ -101,22 +137,53 @@ void FileMetadataAnalyzer::analyzeText(const std::string& filename, Container& w
     }
 }
 
-// Helper class to demonstrate template friendship
+
+// Concept to check if the type has an encrypt method
 template<typename T>
-class FileAnalyzerHelper { 
-//This class may contain methods to help the analyzer in its tasks , Template friendship would help in that regards    
+concept HasEncryptMethod = requires(T obj, const std::string& filename) {
+    { obj.encrypt(filename) } -> std::convertible_to<std::string>;
+};
+
+// Updated FileAnalyzerHelper class
+template<typename T>
+class FileAnalyzerHelper {
 public:
-    static void accessPrivateMember() {
-        FileMetadataAnalyzer File_friend;
-        if(File_friend.isEncrypted) {
-            std::cout<<std::endl<<"The file is encrypted";
-        }
-        else {
-            std::cout<<std::endl<<"The file is not encrypted \n ENCRYPTING...";
-            File_friend.isEncrypted = true;
+    // Method to access the private member of FileMetadataAnalyzer
+    static void accessPrivateMember(FileMetadata& metadata) {
+
+        // Access the private member 'isEncrypted' of FileMetadataAnalyzer
+        if (metadata.isEncrypted) {
+            std::cout << "The file is encrypted." << std::endl;
+        } else {
+            std::cout << "The file is not encrypted." << std::endl;
+
+            // Using the template parameter T for encryption
+            T encryptor;
+            std::cout << "ENCRYPTING... the file of type " << metadata.extension() << " using " << encryptor.name << std::endl;
+            encryptor.encrypt(metadata.filename()); // Perform encryption using the template parameter
+            metadata.isEncrypted = true; // Mark file as encrypted
         }
     }
 };
+
+int calculateFileSize(const std::string& filename) {
+    // Open the file in binary mode
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+
+    // Check if the file was opened successfully
+    if (!file.is_open()) {
+        std::cerr << "Failed to open the file: " << filename << std::endl;
+        return -1; // Return -1 on failure
+    }
+
+    // Get the current file position, which represents the file size
+    int filesize = file.tellg();
+
+    // Close the file
+    file.close();
+
+    return filesize;
+}
 
 int main() {
     // Test single file analysis
@@ -144,9 +211,10 @@ int main() {
         std::cout << "Last Modified (Lambda): " << metadata.last_modified() << std::endl;
     });
 
-    // Test numeric analysis using type traits
-    int numeric_value = 12345;
-    FileMetadata numeric_metadata = FileMetadataAnalyzer::analyze_numeric(numeric_value);
+    // Test numeric analysis using type traits (now focusing on file size)
+    int filesize = calculateFileSize("file1.txt");
+    FileMetadata numeric_metadata = FileMetadataAnalyzer::analyze_numeric("file1.txt", filesize);
+    std::cout << "File metadata after numeric analysis: " << std::endl;
     std::cout << "Filename (Numeric): " << numeric_metadata.filename() << std::endl;
 
     // Test text analysis and word frequency container
@@ -154,11 +222,22 @@ int main() {
     //std::string text_filename = "sample_text2.txt";
     WordFrequencyContainer<std::string, int> wordFrequencies;
     FileMetadataAnalyzer::analyzeText(text_filename, wordFrequencies);
-    std::cout << std::endl<< "Word Frequencies:" << std::endl;
+    std::cout << "\nWord Frequencies:" << std::endl;
     wordFrequencies.print();
 
     // Test template friendship
-    FileAnalyzerHelper<int>::accessPrivateMember();
+    FileMetadataAnalyzer fileAnalyzer;
+    FileMetadata metadata = fileAnalyzer.analyze(filename1);
+
+    FileMetadata metadata2 = fileAnalyzer.analyze(filename3);
+
+    FileAnalyzerHelper<SimpleEncryption>::accessPrivateMember(metadata);
+
+    FileAnalyzerHelper<AdvancedEncryption>::accessPrivateMember(metadata);
+    
+    FileAnalyzerHelper<SimpleEncryption>::accessPrivateMember(metadata2);
+
+    
 
     return 0;
 }
