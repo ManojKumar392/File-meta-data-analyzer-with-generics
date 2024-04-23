@@ -107,11 +107,5 @@ public:
     static void analyzeText(const std::string& filename, Container& wordFrequencies);
 };
 
-// Concept: Concepts
-template<typename T>
-concept CompressionAlgorithm = requires(T algorithm, const std::string& filename) {
-    { algorithm.compress(filename) } -> std::same_as<std::string>;
-};
-
 #endif // FILE_METADATA_ANALYZER_HPP
 
