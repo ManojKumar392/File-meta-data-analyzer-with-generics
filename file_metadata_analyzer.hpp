@@ -16,11 +16,16 @@ public:
     std::string last_modified() const;
     bool is_numeric() const;
 
+    // Template friendship example
+    template<typename T>
+    friend class FileAnalyzerHelper;
+
 private:
     std::string m_filename;
     std::string m_extension;
     std::string m_last_modified;
     bool m_is_numeric;
+    bool isEncrypted = false;
 };
 
 // Custom container class to store word frequencies
@@ -47,7 +52,6 @@ public:
         }
     }
 
-    // Concept: Operator Overloading
     // Operator+ overload to increment word frequency
     WordFrequencyContainer<Key, Value>& operator+(const Key& key) {
         Node* current = head;
@@ -65,7 +69,6 @@ public:
         return *this;
     }
 
-    // Concept: Function Templates
     // Print function to display word frequencies
     void print() const {
         Node* current = head;
@@ -78,37 +81,26 @@ public:
 
 // Class for analyzing file metadata
 class FileMetadataAnalyzer {
-private:
-    bool isEncrypted = true;
 public:
     // Analyze metadata for a single file
     static FileMetadata analyze(const std::string& filename);
 
-    // Concept: Variadic Templates (2)
     // Analyze metadata for multiple files using variadic templates
     template<typename... Args>
     static std::vector<FileMetadata> analyze(const Args&... filenames);
 
-    // Concept: Template Specialization (3)
     // Template specialization for analyze function
     template<typename T>
     static std::vector<FileMetadata> analyze(const T& filename);
 
-    // Concept: Lambda Templates (4)
     // Lambda template for analyzing file metadata
     template<typename Func>
     static void analyze_lambda(const std::string& filename, Func&& func);
 
-    // Concept: Relevant Type Traits (6)
-    // Use of relevant type traits
+    // concept : Type traits
     template<typename T>
     static typename std::enable_if<std::is_arithmetic<T>::value, FileMetadata>::type
-    analyze_numeric(T value);
-
-    // Concept: Template Friendship (7)
-    // Template friendship example
-    template<typename T>
-    friend class FileAnalyzerHelper;
+    analyze_numeric(const std::string& filename, T filesize);
 
     // Analyze text and store word frequencies
     template<typename Container>
@@ -131,4 +123,6 @@ public:
     }
 };
 
+
 #endif // FILE_METADATA_ANALYZER_HPP
+
